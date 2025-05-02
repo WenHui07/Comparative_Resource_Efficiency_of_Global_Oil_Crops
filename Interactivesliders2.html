@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Oil Sustainability Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        h1 {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .slider-group {
+            margin-bottom: 2rem;
+        }
+        .slider-group label {
+            display: block;
+            font-size: 1rem;
+            font-weight: medium;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .slider-container {
+            position: relative;
+            width: 100%;
+        }
+        input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none; /* Add the standard property */
+    width: 100%;
+    height: 0.5rem;
+    background: #e5e7eb;
+    border-radius: 0.5rem;
+    outline: none;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            border: none;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover,
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #4f46e5;
+        }
+        input[type="range"]:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            outline: none;
+        }
+        .slider-value {
+            position: absolute;
+            left: 50%;
+            bottom: -2.5rem;
+            transform: translateX(-50%);
+            font-size: 0.875rem;
+            color: #4b5563;
+            font-weight: medium;
+            width: 80px;
+            text-align: center;
+        }
+        #graph-container {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+        #data-table thead tr {
+            background-color: #f7fafc;
+            color: #374151;
+            font-weight: 600;
+            text-align: left;
+        }
+        #data-table th, #data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        #data-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        #data-table th {
+            font-weight: 600;
+        }
+        .sliders-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .slider-group {
+            width: 48%;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vegetable Oil Sustainability Dashboard</h1>
+        <div class="sliders-container">
+            <div class="slider-group">
+                <label for="palm-oil-slider">Palm Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="palm-oil-slider" min="0" max="78.229" step="any" value="78.229">
+                    <div class="slider-value" id="palm-oil-value">78.229</div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="soybean-oil-slider">Soybean Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="soybean-oil-slider" min="0" max="68.69" step="any" value="68.69">
+                    <div class="slider-value" id="soybean-oil-value">68.69</div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="rapeseed-oil-slider">Rapeseed Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="rapeseed-oil-slider" min="0" max="33.776" step="any" value="33.776">
+                    <div class="slider-value" id="rapeseed-oil-value">33.776</div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="sunflower-oil-slider">Sunflower Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="sunflower-oil-slider" min="0" max="20.384" step="any" value="20.384">
+                    <div class="slider-value" id="sunflower-oil-value">20.384</div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="groundnut-oil-slider">Groundnut Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="groundnut-oil-slider" min="0" max="6.286" step="any" value="6.286">
+                    <div class="slider-value" id="groundnut-oil-value">6.286</div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="cottonseed-oil-slider">Cottonseed Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <input type="range" id="cottonseed-oil-slider" min="0" max="4.76" step="any" value="4.76">
+                    <div class="slider-value" id="cottonseed-oil-value">4.76</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="graph-container"></div>
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Vegetable Oil</th>
+                    <th>Area Harvested (Million ha)</th>
+                    <th>Land Use (Mha/Mt)</th>
+                    <th>Water Footprint (m3/tonne)</th>
+                    <th>Fertilizer Input (kg/ha/year)</th>
+                    <th>Labour Demand (hrs/ha/year)</th>
+                    <th>Labour Cost ($/tone)</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+       // Sample Data (same as your Python script)
+        const data = {
+            "Vegetable Oil": ["Palm Oil", "Soybean Oil", "Rapeseed Oil", "Sunflower Oil", "Groundnut Oil", "Cottonseed Oil"],
+            "Global Oil Production (Mt)": [78.229, 68.69, 33.776, 20.384, 6.286, 4.76],
+            "Oilseed Yield (Mt/ha)": [0.75, 2.87, 2.01, 1.85, 1.75, 1.39],
+            "Area Harvested (Million ha)": [27.381, 146.54, 42.428, 28.127, 29.028, 30.209],
+            "Land Use (Mha/Mt)": [0.7424, 2.8701, 2.0091, 1.8484, 1.7465, 1.3897],
+            "Water Footprint (m3/tonne)": [5000, 4200, 4300, 6800, 7500, 3800],
+            "Fertilizer Input (kg/ha/year)": [337.83, 81.94, 126.41, 82.21, 8.67, 184.29],
+            "Labour Demand (hrs/ha/year)": [200, 10, 10, 10, 100, 150],
+            "Labour Cost ($/tone)": [150, 50, 100, 200, 650, 300]
+        };
+
+        function filterData(productionValues) {
+            return data["Vegetable Oil"].reduce((acc, oil, index) => {
+                if (data["Global Oil Production (Mt)"][index] <= productionValues[index]) {
+                    acc.push({
+                        "Vegetable Oil": oil,
+                        "Area Harvested (Million ha)": data["Area Harvested (Million ha)"][index],
+                        "Land Use (Mha/Mt)": data["Land Use (Mha/Mt)"][index],
+                        "Water Footprint (m3/tonne)": data["Water Footprint (m3/tonne)"][index],
+                        "Fertilizer Input (kg/ha/year)": data["Fertilizer Input (kg/ha/year)"][index],
+                        "Labour Demand (hrs/ha/year)": data["Labour Demand (hrs/ha/year)"][index],
+                        "Labour Cost ($/tone)": data["Labour Cost ($/tone)"][index]
+                    });
+                }
+                return acc;
+            }, []);
+        }
+
+        function updateTable(filteredData) {
+            const tableBody = document.querySelector("#data-table tbody");
+            tableBody.innerHTML = "";
+            filteredData.forEach(item => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item["Vegetable Oil"]}</td>
+                    <td>${item["Area Harvested (Million ha)"]}</td>
+                    <td>${item["Land Use (Mha/Mt)"]}</td>
+                    <td>${item["Water Footprint (m3/tonne)"]}</td>
+                    <td>${item["Fertilizer Input (kg/ha/year)"]}</td>
+                    <td>${item["Labour Demand (hrs/ha/year)"]}</td>
+                    <td>${item["Labour Cost ($/tone)"]}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateGraph(filteredData, productionValues) {
+            if (filteredData.length === 0) {
+                Plotly.newPlot('graph-container', [{
+                    y: [0],
+                    type: 'bar',
+                    marker: { color: 'red' },
+                    hovertemplate: 'No data available<extra></extra>'
+                }], {
+                    title: {
+                        text: `No data available for selected Global Oil Production levels`,
+                         font: {
+                            size: 14,
+                            color: '#374151'
+                        }
+                    },
+                    xaxis: {
+                        title: {
+                            text: 'Vegetable Oil',
+                             font: {
+                                size: 12,
+                                color: '#4b5563'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Value',
+                             font: {
+                                size: 12,
+                                 color: '#4b5563'
+                            }
+                        }
+                    },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                });
+                return;
+            }
+            const vegetableOils = filteredData.map(item => item["Vegetable Oil"]);
+            const areaHarvested = filteredData.map(item => item["Area Harvested (Million ha)"]);
+            const landUse = filteredData.map(item => item["Land Use (Mha/Mt)"]);
+            const waterFootprint = filteredData.map(item => item["Water Footprint (m3/tonne)"]);
+            const fertilizerInput = filteredData.map(item => item["Fertilizer Input (kg/ha/year)"]);
+            const labourDemand = filteredData.map(item => item["Labour Demand (hrs/ha/year)"]);
+            const labourCost = filteredData.map(item => item["Labour Cost ($/tone)"]);
+
+            const trace1 = {
+                x: vegetableOils,
+                y: areaHarvested,
+                type: 'bar',
+                name: 'Area Harvested',
+                marker: { color: '#6b7280' },
+                hovertemplate: '<b>%{x}</b><br>Area Harvested: %{y} Million ha<extra></extra>'
+            };
+            const trace2 = {
+                x: vegetableOils,
+                y: landUse,
+                type: 'bar',
+                name: 'Land Use',
+                marker: { color: '#84cc16' },
+                hovertemplate: '<b>%{x}</b><br>Land Use: %{y} Mha/Mt<extra></extra>'
+            };
+            const trace3 = {
+                x: vegetableOils,
+                y: waterFootprint,
+                type: 'bar',
+                name: 'Water Footprint',
+                marker: { color: '#3b82f6' },
+                hovertemplate: '<b>%{x}</b><br>Water Footprint: %{y} m3/tonne<extra></extra>'
+            };
+            const trace4 = {
+                x: vegetableOils,
+                y: fertilizerInput,
+                type: 'bar',
+                name: 'Fertilizer Input',
+                marker: { color: '#f59e0b' },
+                hovertemplate: '<b>%{x}</b><br>Fertilizer Input: %{y} kg/ha/year<extra></extra>'
+            };
+             const trace5 = {
+                x: vegetableOils,
+                y: labourDemand,
+                type: 'bar',
+                name: 'Labour Demand',
+                marker: { color: '#ec4899' },
+                hovertemplate: '<b>%{x}</b><br>Labour Demand: %{y} hrs/ha/year<extra></extra>'
+            };
+            const trace6 = {
+                x: vegetableOils,
+                y: labourCost,
+                type: 'bar',
+                name: 'Labour Cost',
+                marker: { color: '#10b981' },
+                hovertemplate: '<b>%{x}</b><br>Labour Cost: %{y} $/tone<extra></extra>'
+            };
+
+            const layout = {
+                title: {
+                    text: `Comparison of Vegetable Oil Data`,
+                    font: {
+                        size: 16,
+                        color: '#374151'
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Vegetable Oil',
+                        font: {
+                            size: 12,
+                            color: '#4b5563'
+                        }
+                    },
+                    tickfont: {
+                        size: 10,
+                        color: '#6b7280'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Value',
+                        font: {
+                            size: 12,
+                            color: '#4b5563'
+                        }
+                    },
+                    tickfont: {
+                        size: 10,
+                        color: '#6b7280'
+                    }
+                },
+                barmode: 'group',
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                legend: {
+                    font: {
+                        size: 10,
+                        color: '#4b5563'
+                    },
+                    orientation: 'h',
+                    yanchor: 'bottom',
+                    y: 1.02,
+                    xanchor: 'right',
+                    x: 1
+                },
+                margin: {
+                    l: 50,
+                    r: 20,
+                    t: 60,
+                    b: 80
+                },
+                hoverlabel: {
+                    bgcolor: '#f0f0f0',
+                    bordercolor: '#d1d5db',
+                    font: {
+                        color: '#1f2937'
+                    }
+                }
+            };
+
+            Plotly.newPlot('graph-container', [trace1, trace2, trace3, trace4, trace5, trace6], layout);
+        }
+
+        // Initial graph rendering
+        const initialProductionValues = [78.229, 68.69, 33.776, 20.384, 6.286, 4.76];
+        updateGraphs(initialProductionValues);
+
+        // Event listeners for sliders
+        document.getElementById('palm-oil-slider').addEventListener('input', function() {
+            const palmValue = parseFloat(this.value);
+            document.getElementById('palm-oil-value').textContent = palmValue.toFixed(2);
+            const productionValues = [
+                palmValue,
+                parseFloat(document.getElementById('soybean-oil-slider').value),
+                parseFloat(document.getElementById('rapeseed-oil-slider').value),
+                parseFloat(document.getElementById('sunflower-oil-slider').value),
+                parseFloat(document.getElementById('groundnut-oil-slider').value),
+                parseFloat(document.getElementById('cottonseed-oil-slider').value)
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        document.getElementById('soybean-oil-slider').addEventListener('input', function() {
+            const soybeanValue = parseFloat(this.value);
+            document.getElementById('soybean-oil-value').textContent = soybeanValue.toFixed(2);
+            const productionValues = [
+                parseFloat(document.getElementById('palm-oil-slider').value),
+                soybeanValue,
+                parseFloat(document.getElementById('rapeseed-oil-slider').value),
+                parseFloat(document.getElementById('sunflower-oil-slider').value),
+                parseFloat(document.getElementById('groundnut-oil-slider').value),
+                parseFloat(document.getElementById('cottonseed-oil-slider').value)
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        document.getElementById('rapeseed-oil-slider').addEventListener('input', function() {
+            const rapeseedValue = parseFloat(this.value);
+            document.getElementById('rapeseed-oil-value').textContent = rapeseedValue.toFixed(2);
+             const productionValues = [
+                parseFloat(document.getElementById('palm-oil-slider').value),
+                parseFloat(document.getElementById('soybean-oil-slider').value),
+                rapeseedValue,
+                parseFloat(document.getElementById('sunflower-oil-slider').value),
+                parseFloat(document.getElementById('groundnut-oil-slider').value),
+                parseFloat(document.getElementById('cottonseed-oil-slider').value)
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        document.getElementById('sunflower-oil-slider').addEventListener('input', function() {
+            const sunflowerValue = parseFloat(this.value);
+            document.getElementById('sunflower-oil-value').textContent = sunflowerValue.toFixed(2);
+            const productionValues = [
+                parseFloat(document.getElementById('palm-oil-slider').value),
+                parseFloat(document.getElementById('soybean-oil-slider').value),
+                parseFloat(document.getElementById('rapeseed-oil-slider').value),
+                sunflowerValue,
+                parseFloat(document.getElementById('groundnut-oil-slider').value),
+                parseFloat(document.getElementById('cottonseed-oil-slider').value)
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        document.getElementById('groundnut-oil-slider').addEventListener('input', function() {
+            const groundnutValue = parseFloat(this.value);
+            document.getElementById('groundnut-oil-value').textContent = groundnutValue.toFixed(2);
+            const productionValues = [
+                parseFloat(document.getElementById('palm-oil-slider').value),
+                parseFloat(document.getElementById('soybean-oil-slider').value),
+                parseFloat(document.getElementById('rapeseed-oil-slider').value),
+                parseFloat(document.getElementById('sunflower-oil-slider').value),
+                groundnutValue,
+                parseFloat(document.getElementById('cottonseed-oil-slider').value)
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        document.getElementById('cottonseed-oil-slider').addEventListener('input', function() {
+            const cottonseedValue = parseFloat(this.value);
+            document.getElementById('cottonseed-oil-value').textContent = cottonseedValue.toFixed(2);
+            const productionValues = [
+                parseFloat(document.getElementById('palm-oil-slider').value),
+                parseFloat(document.getElementById('soybean-oil-slider').value),
+                parseFloat(document.getElementById('rapeseed-oil-slider').value),
+                parseFloat(document.getElementById('sunflower-oil-slider').value),
+                parseFloat(document.getElementById('groundnut-oil-slider').value),
+                cottonseedValue
+            ];
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        });
+
+        function updateGraphs(productionValues) {
+            const filteredData = filterData(productionValues);
+            updateTable(filteredData);
+            updateGraph(filteredData, productionValues);
+        }
+    </script>
+</body>
+</html>
