@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Oil Sustainability Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb; /* Light background */
+            color: #1f2937; /* Darker text for better contrast */
+        }
+        .container {
+            max-width: 900px; /* Increased max-width for larger screens */
+            margin: 2rem auto; /* Increased margin for better spacing */
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.75rem; /* Rounded corners - Tailwind's rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Shadow - Tailwind's shadow-md */
+        }
+        h1 {
+            font-size: 2.25rem; /* Tailwind's text-3xl */
+            font-weight: bold; /* Tailwind's font-bold */
+            color: #1e293b; /* Slightly darker heading color */
+            margin-bottom: 1.5rem; /* Tailwind's mb-6 */
+            text-align: center;
+        }
+        .slider-group {
+            margin-bottom: 2rem; /* Tailwind's mb-8 */
+        }
+        .slider-group label {
+            display: block;
+            font-size: 1rem; /* Tailwind's text-base */
+            font-weight: medium; /* Tailwind's font-medium */
+            color: #374151; /* Label color - Tailwind's text-gray-700 */
+            margin-bottom: 0.5rem; /* Tailwind's mb-2 */
+        }
+        .slider-container {
+            position: relative; /* Allows for absolute positioning of the value */
+        }
+
+        input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none; /* Add the standard property */
+    width: 100%;
+    height: 0.5rem;
+    background: #e5e7eb;
+    border-radius: 0.5rem;
+    outline: none;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem; /* Tailwind's w-5 */
+            height: 1.25rem; /* Tailwind's h-5 */
+            border-radius: 50%;
+            background: #6366f1; /* Thumb color - Tailwind's bg-indigo-500 */
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* Shadow - Tailwind's shadow-sm */
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 1.25rem; /* Tailwind's w-5 */
+            height: 1.25rem; /* Tailwind's h-5 */
+            border-radius: 50%;
+            background: #6366f1; /* Thumb color - Tailwind's bg-indigo-500 */
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* Shadow - Tailwind's shadow-sm */
+            border: none; /* Remove default border */
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover,
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #4f46e5; /* Hover color - Tailwind's bg-indigo-600 */
+        }
+
+        input[type="range"]:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); /* Focus shadow - Tailwind's ring-indigo-500 with opacity */
+            outline: none; /* Remove default outline */
+        }
+
+        .slider-value {
+            position: absolute;
+            left: 50%;
+            bottom: -2.5rem; /* Tailwind's -mb-10 */
+            transform: translateX(-50%);
+            font-size: 0.875rem; /* Tailwind's text-sm */
+            color: #4b5563; /* Tailwind's text-gray-600 */
+            font-weight: medium;  /* Tailwind's font-medium */
+        }
+
+
+        #graph-global-production,
+        #graph-yield {
+            width: 100%;
+            height: 400px; /* Increased height for better visualization */
+            margin-bottom: 2rem; /* Tailwind's mb-8 */
+            border: 1px solid #e5e7eb; /* Tailwind's border-gray-200 */
+            border-radius: 0.75rem;  /* Tailwind's rounded-lg */
+            padding: 1rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+        }
+
+        /* Add space between the graphs and the sliders */
+        #graph-global-production {
+            margin-top: 2rem; /* Tailwind's mt-8 */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vegetable Oil Sustainability Dashboard</h1>
+
+        <div class="slider-group">
+            <label for="water-slider">Max Water Footprint (m3/tonne)</label>
+            <div class="slider-container">
+                <input type="range" id="water-slider" min="0" max="8000" step="100" value="8000">
+                <div class="slider-value" id="water-value">8000</div>
+            </div>
+        </div>
+
+        <div class="slider-group">
+            <label for="fertilizer-slider">Max Fertilizer Input (kg/ha/year)</label>
+            <div class="slider-container">
+                <input type="range" id="fertilizer-slider" min="0" max="400" step="10" value="400">
+                <div class="slider-value" id="fertilizer-value">400</div>
+            </div>
+        </div>
+
+        <div class="slider-group">
+            <label for="labour-slider">Max Labour (hrs/ha/year)</label>
+            <div class="slider-container">
+                <input type="range" id="labour-slider" min="0" max="300" step="10" value="300">
+                <div class="slider-value" id="labour-value">300</div>
+            </div>
+        </div>
+
+        <div class="slider-group">
+            <label for="landuse-slider">Max Land Use (ha/Mt)</label>
+            <div class="slider-container">
+                <input type="range" id="landuse-slider" min="0" max="4" step="0.1" value="4">
+                <div class="slider-value" id="landuse-value">4</div>
+            </div>
+        </div>
+
+        <div id="graph-global-production"></div>
+        <div id="graph-yield"></div>
+    </div>
+
+    <script>
+        // Sample Data (same as your Python script)
+        const data = {
+            "Vegetable Oil": ["Palm Oil", "Soybean Oil", "Rapeseed Oil", "Sunflower Oil", "Groundnut Oil", "Cottonseed Oil"],
+            "Global Oil Production (Mt)": [78.229, 68.69, 33.776, 20.384, 6.286, 4.76],
+            "Oilseed Yield (Mt/ha)": [0.75, 2.87, 2.01, 1.85, 1.75, 1.39],
+            "Area Harvested (Million ha)": [27.381, 146.54, 42.428, 28.127, 29.028, 30.209],
+            "Land Use (Mha/Mt)": [0.7424, 2.8701, 2.0091, 1.8484, 1.7465, 1.3897],
+            "Water Footprint (m3/tonne)": [5000, 4200, 4300, 6800, 7500, 3800],
+            "Fertilizer Input (kg/ha/year)": [337.83, 81.94, 126.41, 82.21, 8.67, 184.29],
+            "Labour Demand (hrs/ha/year)": [200, 10, 10, 10, 100, 150],
+            "Labour Cost ($/tone)": [150, 50, 100, 200, 650, 300]
+        };
+
+        function filterData(waterVal, fertilizerVal, labourVal, landuseVal) {
+            return data["Vegetable Oil"].reduce((acc, oil, index) => {
+                if (data["Water Footprint (m3/tonne)"][index] <= waterVal &&
+                    data["Fertilizer Input (kg/ha/year)"][index] <= fertilizerVal &&
+                    data["Labour Demand (hrs/ha/year)"][index] <= labourVal &&
+                    data["Land Use (Mha/Mt)"][index] <= landuseVal) {
+                    acc["Vegetable Oil"].push(oil);
+                    acc["Global Oil Production (Mt)"].push(data["Global Oil Production (Mt)"][index]);
+                    acc["Oilseed Yield (Mt/ha)"].push(data["Oilseed Yield (Mt/ha)"][index]);
+                }
+                return acc;
+            }, {"Vegetable Oil": [], "Global Oil Production (Mt)": [], "Oilseed Yield (Mt/ha)": []});
+        }
+
+        function updateGraphs(waterVal, fertilizerVal, labourVal, landuseVal) {
+            const filteredData = filterData(waterVal, fertilizerVal, labourVal, landuseVal);
+
+            const productionTrace = {
+                x: filteredData["Vegetable Oil"],
+                y: filteredData["Global Oil Production (Mt)"],
+                type: 'bar',
+                marker: { color: '#6b7280' }, // Tailwind's gray-500
+                hovertemplate: '<b>%{x}</b><br>Production: %{y} Mt<extra></extra>'
+            };
+
+            const yieldTrace = {
+                x: filteredData["Vegetable Oil"],
+                y: filteredData["Oilseed Yield (Mt/ha)"],
+                type: 'bar',
+                marker: { color: '#84cc16' }, // Tailwind's lime-500
+                hovertemplate: '<b>%{x}</b><br>Yield: %{y} Mt/ha<extra></extra>'
+            };
+
+            const productionLayout = {
+                title: {
+                    text: 'Global Production after Filtering',
+                    font: {
+                        size: 18,
+                        color: '#374151' // Tailwind's text-gray-700
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Vegetable Oil',
+                        font: {
+                            size: 14,
+                            color: '#4b5563' // Tailwind's text-gray-600
+                        }
+                    },
+                    tickfont: {
+                        size: 12,
+                        color: '#6b7280'  // Tailwind's text-gray-500
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Global Oil Production (Mt)',
+                        font: {
+                            size: 14,
+                            color: '#4b5563' // Tailwind's text-gray-600
+                        }
+                    },
+                    tickfont: {
+                        size: 12,
+                        color: '#6b7280' // Tailwind's text-gray-500
+                    }
+                },
+                // Removed gridlines, using background color from body
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                showlegend: false,
+                margin: {
+                    l: 50,
+                    r: 20,
+                    t: 50,
+                    b: 50
+                },
+                hoverlabel: {
+                    bgcolor: '#f0f0f0',  // Light background for hover labels
+                    bordercolor: '#d1d5db', // Add a border
+                    font: {
+                        color: '#1f2937'  // Dark font color
+                    }
+                }
+
+            };
+
+            const yieldLayout = {
+                title: {
+                    text: 'Oilseed Yield after Filtering',
+                    font: {
+                        size: 18,
+                        color: '#374151' // Tailwind's text-gray-700
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Vegetable Oil',
+                        font: {
+                            size: 14,
+                            color: '#4b5563' // Tailwind's text-gray-600
+                        }
+                    },
+                    tickfont: {
+                        size: 12,
+                        color: '#6b7280'  // Tailwind's text-gray-500
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Oilseed Yield (Mt/ha)',
+                        font: {
+                            size: 14,
+                            color: '#4b5563' // Tailwind's text-gray-600
+                        }
+                    },
+                    tickfont: {
+                        size: 12,
+                        color: '#6b7280' // Tailwind's text-gray-500
+                    }
+                },
+                // Removed gridlines
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                showlegend: false,
+                margin: {
+                    l: 50,
+                    r: 20,
+                    t: 50,
+                    b: 50
+                },
+                hoverlabel: {
+                    bgcolor: '#f0f0f0',  // Light background for hover labels
+                    bordercolor: '#d1d5db', // Add a border
+                    font: {
+                        color: '#1f2937'  // Dark font color
+                    }
+                }
+            };
+
+            Plotly.newPlot('graph-global-production', [productionTrace], productionLayout);
+            Plotly.newPlot('graph-yield', [yieldTrace], yieldLayout);
+        }
+
+        // Initial graph rendering
+        updateGraphs(8000, 400, 300, 4);
+
+        // Event listeners for sliders
+        document.getElementById('water-slider').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('water-value').textContent = value;
+            updateGraphs(value,
+                         parseInt(document.getElementById('fertilizer-slider').value),
+                         parseInt(document.getElementById('labour-slider').value),
+                         parseFloat(document.getElementById('landuse-slider').value));
+        });
+
+        document.getElementById('fertilizer-slider').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('fertilizer-value').textContent = value;
+            updateGraphs(parseInt(document.getElementById('water-slider').value),
+                         value,
+                         parseInt(document.getElementById('labour-slider').value),
+                         parseFloat(document.getElementById('landuse-slider').value));
+        });
+
+        document.getElementById('labour-slider').addEventListener('input', function() {
+            const value = parseInt(this.value);
+            document.getElementById('labour-value').textContent = value;
+            updateGraphs(parseInt(document.getElementById('water-slider').value),
+                         parseInt(document.getElementById('fertilizer-slider').value),
+                         value,
+                         parseFloat(document.getElementById('landuse-slider').value));
+        });
+
+        document.getElementById('landuse-slider').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('landuse-value').textContent = value.toFixed(1);
+            updateGraphs(parseInt(document.getElementById('water-slider').value),
+                         parseInt(document.getElementById('fertilizer-slider').value),
+                         parseInt(document.getElementById('labour-slider').value),
+                         value);
+        });
+    </script>
+</body>
+</html>
