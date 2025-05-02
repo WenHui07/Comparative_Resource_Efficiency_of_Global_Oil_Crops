@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Top 3 Crop Production Country Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #map {
+            height: 60vh;
+            width: 65%; /* Adjusted width to accommodate the chart */
+            float: left; /* Float map to the left */
+        }
+        #chartContainer {
+            position: relative; /* Changed from fixed to relative */
+            top: 0; /* Reset top */
+            left: 0; /* Reset left */
+            width: 30%; /* Adjusted width for the chart */
+            height: 60vh; /* Make chart height match map height */
+            background: white;
+            z-index: 1000;
+            padding: 20px;
+            border: 2px solid #ccc;
+            display: block; /* Make chart always visible */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            float: left; /* Float chart to the left, beside the map */
+            margin-left: 20px; /* Add some margin between map and chart */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+        #chartContainer canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        #chartContainer button {
+            margin-top: 10px;
+        }
+        #cropListContainer {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            width: 95%; /* Reduced width of the slider container */
+        }
+        #cropListContainer h3 {
+            margin-top: 0;
+        }
+        #cropListContainer select {
+            width: 250px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #slider-container {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            width: 95%; /* Reduced width of the slider container */
+        }
+        #slider-container h3 {
+            margin-top: 0;
+        }
+        #slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        #water-slider, #fertilizer-slider, #labour-slider, #landuse-slider {
+            width: 40%; /* Reduced width of the sliders */
+            display: inline-block; /* Make sliders display inline */
+            margin-right: 10px; /* Add some margin between sliders */
+        }
+        #slider-container > div {
+            display: inline-block; /* Make slider value divs display inline */
+            width: 50%; /* adjust as necessary */
+        }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center">Top 3 Crop Production Country Map</h2>
+
+<div id="cropListContainer">
+    <h3>Select Crop Type</h3>
+    <select id="cropTypeSelect">
+        <option value="all">All Crops</option>
+        <option value="Palm Oil">Palm oil</option>
+        <option value="soybean">Soybean oil</option>
+        <option value="rapeseed">Rapeseed oil</option>
+        <option value="sunflower">Sunflower oil</option>
+        <option value="groundnut">Groundnut oil</option>
+        <option value="cottonseed">Cottonseed oil</option>
+    </select>
+</div>
+
+<div id="slider-container">
+    <h3>Filter Vegetable Oils (from Python Dashboard)</h3>
+    <label for="water-slider">Max Water Footprint (m3/tonne)</label>
+    <input type="range" id="water-slider" min="0" max="8000" step="100" value="8000">
+    <div id="water-slider-value">8000</div>
+
+    <label for="fertilizer-slider">Max Fertilizer Input (kg/ha/year)</label>
+    <input type="range" id="fertilizer-slider" min="0" max="400" step="10" value="400">
+    <div id="fertilizer-value">400</div>
+
+    <label for="labour-slider">Max Labour (hrs/ha/year)</label>
+    <input type="range" id="labour-slider" min="0" max="300" step="10" value="300">
+    <div id="labour-slider-value">300</div>
+
+    <label for="landuse-slider">Max Land Use (ha/Mt)</label>
+    <input type="range" id="landuse-slider" min="0" max="4" step="0.1" value="4">
+    <div id="landuse-slider-value">4</div>
+</div>
+
+<div id="map"></div>
+
+<div id="chartContainer">
+    <canvas id="chartCanvas"></canvas>
+    <button onclick="document.getElementById('chartContainer').style.display='none'">Close</button>
+</div>
+
+<script>
+    // Initialize the map
+    const map = L.map('map').setView([20, 0], 2); // centered in Southeast Asia
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(map);
+
+    // Production trends and Land Use data for different crops
+    const productionTrends = {
+        'Palm Oil': {
+            'Indonesia': {
+                years: [2022, 2023, 2024],
+                values: [45.0, 43.0, 46.0],
+                waterFootprint: 6000,
+                fertilizerInput: 200,
+                labour: 150,
+                landUse: 0.8
+            },
+            'Malaysia': {
+                years: [2022, 2023, 2024],
+                values: [18.389, 19.71, 18.7],
+                waterFootprint: 5800,
+                fertilizerInput: 180,
+                labour: 140,
+                landUse: 0.75
+            },
+            'Thailand': {
+                years: [2022, 2023, 2024],
+                values: [3.321, 3.292, 3.4],
+                waterFootprint: 6200,
+                fertilizerInput: 210,
+                labour: 160,
+                landUse: 0.9
+            }
+        },
+        'Soybean': {
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [18.24, 18.81, 19.95],
+                waterFootprint: 2000,
+                fertilizerInput: 100,
+                labour: 50,
+                landUse: 0.3
+            },
+            'United States': {
+                years: [2022, 2023, 2024],
+                values: [11.897, 12.289, 13.063],
+                waterFootprint: 1800,
+                fertilizerInput: 90,
+                labour: 45,
+                landUse: 0.28
+            },
+            'Brazil': {
+                years: [2022, 2023, 2024],
+                values: [10.58, 11.055, 11.582],
+                waterFootprint: 2200,
+                fertilizerInput: 110,
+                labour: 55,
+                landUse: 0.32
+            }
+        },
+        'Rapeseed': {
+            'European Union': {
+                years: [2022, 2023, 2024],
+                values: [10.164, 10.248, 9.849],
+                waterFootprint: 2500,
+                fertilizerInput: 120,
+                labour: 60,
+                landUse: 0.4
+            },
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [7.605, 7.722, 7.722],
+                waterFootprint: 2700,
+                fertilizerInput: 130,
+                labour: 65,
+                landUse: 0.42
+            },
+            'Canada': {
+                years: [2022, 2023, 2024],
+                values: [4.151, 4.706, 4.667],
+                waterFootprint: 2300,
+                fertilizerInput: 115,
+                labour: 58,
+                landUse: 0.38
+            }
+        },
+        'Sunflower': {
+            'Russia': {
+                years: [2022, 2023, 2024],
+                values: [6.484, 6.815, 6.773],
+                waterFootprint: 3000,
+                fertilizerInput: 140,
+                labour: 70,
+                landUse: 0.5
+            },
+            'Ukraine': {
+                years: [2022, 2023, 2024],
+                values: [6.02, 6.751, 5.613],
+                waterFootprint: 3200,
+                fertilizerInput: 150,
+                labour: 75,
+                landUse: 0.52
+            },
+            'European Union': {
+                years: [2022, 2023, 2024],
+                values: [4.014, 3.887, 3.211],
+                waterFootprint: 2800,
+                fertilizerInput: 135,
+                labour: 68,
+                landUse: 0.48
+            }
+        },
+        'Groundnut': {
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [3.136, 3.136, 3.104],
+                waterFootprint: 1500,
+                fertilizerInput: 80,
+                labour: 40,
+                landUse: 0.25
+            },
+            'India': {
+                years: [2022, 2023, 2024],
+                values: [1.221, 1.123, 1.256],
+                waterFootprint: 1700,
+                fertilizerInput: 85,
+                labour: 42,
+                landUse: 0.27
+            },
+            'Nigeria': {
+                years: [2022, 2023, 2024],
+                values: [0.265, 0.265, 0.265],
+                waterFootprint: 1600,
+                fertilizerInput: 75,
+                labour: 38,
+                landUse: 0.24
+            }
+        },
+        'Cottonseed': {
+            'India': {
+                years: [2022, 2023, 2024],
+                values: [1.369, 1.355, 1.297],
+                waterFootprint: 2400,
+                fertilizerInput: 118,
+                labour: 59,
+                landUse: 0.39
+            },
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [1.164, 1.164, 1.164],
+                waterFootprint: 2600,
+                fertilizerInput: 125,
+                labour: 62,
+                landUse: 0.41
+            },
+            'Brazil': {
+                years: [2022, 2023, 2024],
+                values: [0.576, 0.72, 0.805],
+                waterFootprint: 2200,
+                fertilizerInput: 110,
+                labour: 55,
+                landUse: 0.35
+            }
+        }
+        // Add more crops as necessary
+    };
+
+    const landUseData = {
+        'Palm Oil': {
+            'Indonesia': {
+                years: [2022, 2023, 2024],
+                values: [0.8667, 0.8148, 0.8536]
+            },
+            'Malaysia': {
+                years: [2022, 2023, 2024],
+                values: [0.8160, 0.8699, 0.8159]
+            },
+            'Thailand': {
+                years: [2022, 2023, 2024],
+                values: [0.2867, 0.2644, 0.2731]
+            }
+        },
+        'Soybean': {
+            'Brazil': {
+                years: [2022, 2023, 2024],
+                values: [3.6323, 3.3478, 3.5654]
+            },
+            'United States': {
+                years: [2022, 2023, 2024],
+                values: [3.3327, 3.4022, 3.4126]
+            },
+            'China':{
+                years: [2022, 2023, 2024],
+                values: [1.7361, 2.9450, 2.8324]
+            }
+        },
+        'Rapeseed': {
+            'India': {
+                years: [2022, 2023, 2024],
+                values: [2.1295, 2.0748, 2.1124]
+            },
+            'Canada': {
+                years: [2022, 2023, 2024],
+                values: [2.2816, 2.3036, 1.9062]
+            },
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [2.0951, 2.1351, 2.1351]
+            },
+            'European Union': { // Added European Union data for Rapeseed
+                years: [2022, 2023, 2024],
+                values: [2.50, 2.45, 2.30]
+            }
+        },
+        'Sunflower': {
+            'Russia': {
+                years: [2022, 2023, 2024],
+                values: [1.7840, 1.8387, 1.7604]
+            },
+            'Ukraine': {
+                years: [2022, 2023, 2024],
+                values: [2.1404, 2.4219, 2.1613]
+            },
+            'European Union': {
+                years: [2022, 2023, 2024],
+                values: [1.8897, 2.1506, 1.7545]
+            }
+        },
+        'Groundnut': {
+            'India': {
+                years: [2022, 2023, 2024],
+                values: [3.6895, 3.8462, 3.4545]
+            },
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [1.3450, 1.2505, 1.4639]
+            },
+            'Nigeria': {
+                years: [2022, 2023, 2024],
+                values: [1.2600, 1.2464, 1.2464]
+            }
+        },
+        'Cottonseed': {
+            'India': {
+                years: [2022, 2023, 2024],
+                values: [0.8638, 0.8504, 0.8995]
+            },
+            'China': {
+                years: [2022, 2023, 2024],
+                values: [3.2890, 3.1821, 3.6590]
+            },
+            'Brazil': {
+                years: [2022, 2023, 2024],
+                values: [1.3190, 1.8561, 1.6863]
+            }
+        }
+        // Add more crops as necessary
+    };
+
+    const usdaLinks = {
+        'Palm Oil': 'https://www.fas.usda.gov/data/production/commodity/4243000',
+        'Soybean': 'https://www.fas.usda.gov/data/production/commodity/4232000',
+        'Rapeseed': 'https://www.fas.usda.gov/data/production/commodity/4239100',
+        'Sunflower': 'https://www.fas.usda.gov/data/production/commodity/4236000',
+        'Groundnut': 'https://ipad.fas.usda.gov/cropexplorer/cropview/commodityView.aspx?cropid=2221000',
+        'Cottonseed': 'https://www.indexmundi.com/agriculture/?commodity=cottonseed-oil&graph=production#google_vignette'
+    };
+
+    let highlightedPolygon = null;
+
+    // Marker creator function
+    function makeMarker(lat, lon, html, cropType, countryName) {
+        const marker = L.marker([lat, lon]).on('click', () => {
+            let popupContent = html;
+            if (usdaLinks[cropType]) {
+                popupContent += `<br><a href="${usdaLinks[cropType]}" target="_blank">USDA Production Data</a>`;
+            }
+            L.popup()
+                .setLatLng([lat, lon])
+                .setContent(popupContent)
+                .openOn(map);
+            if (productionTrends[cropType] && productionTrends[cropType][countryName] && landUseData[cropType] && landUseData[cropType][countryName]) {
+                showChart(cropType, countryName);
+            } else {
+                console.warn(`Data missing for ${countryName} - ${cropType}`);
+            }
+            highlightCountry(countryName);
+        }).addTo(map);
+        return marker;
+    }
+
+    function highlightCountry(countryName) {
+        const countryCoordinates = {
+            'Indonesia': [[-2, 109.5], [-2, 118], [-8, 118], [-8, 109.5]],
+            'Malaysia': [[2.5, 101], [2.5, 103], [6.5, 103], [6.5, 101]],
+            'Thailand': [[13, 99], [13, 101], [18, 101], [18, 99]],
+            'China': [[32, 100], [32, 110], [40, 110], [40, 100]],
+            'United States': [[30, -100], [30, -90], [40, -90], [40, -100]],
+            'Brazil': [[-10, -60], [-10, -50], [-20, -50], [-20, -60]],
+            'European Union': [[45, 10], [45, 20], [55, 20], [55, 10]],
+            'Canada': [[50, -110], [50, -100], [60, -100], [60, -110]],
+            'Russia': [[55, 30], [55, 40], [65, 40], [65, 30]],
+            'Ukraine': [[48, 25], [48, 35], [52, 35], [52, 25]],
+            'India': [[20, 70], [20, 80], [30, 80], [30, 70]],
+            'Nigeria': [[8, 5], [8, 10], [12, 10], [12, 5]],
+            'Argentina': [[-40, -65], [-40, -60], [-30, -60], [-30, -65]]
+        };
+
+        if (highlightedPolygon) {
+            map.removeLayer(highlightedPolygon);
+        }
+
+        const coordinates = countryCoordinates[countryName];
+        if (coordinates) {
+            highlightedPolygon = L.polygon(coordinates, {
+                color: 'red',
+                fillColor: 'red',
+                fillOpacity: 0.3,
+                weight: 2
+            }).addTo(map);
+        }
+    }
+
+    // Create markers for different countries and crops
+    function updateMarkers(cropType, waterVal, fertilizerVal, labourVal, landuseVal) {
+        // Clear existing markers
+        map.eachLayer(layer => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        const countryCoords = {
+            'Indonesia': [-0.7893, 113.9213],
+            'Malaysia': [4.2105, 101.9758],
+            'Thailand': [15.8700, 100.9925],
+            'China': [35.8617, 104.1954],
+            'United States': [37.0902, -95.7129],
+            'Brazil': [-14.2350, -51.9253],
+            'European Union': [50.1109, 8.6821],
+            'Canada': [56.1304, -106.3468],
+            'Russia': [61.5240, 105.3188],
+            'Ukraine': [48.3794, 31.1656],
+            'India': [20.5937, 78.9629],
+            'Nigeria': [9.0820, 8.6753],
+            'Argentina': [-38.4161, -63.6167]
+        };
+
+        if (cropType === 'all') {
+            for (const crop in productionTrends) {
+                const cropData = productionTrends[crop];
+                for (const country in cropData) {
+                    const [lat, lon] = countryCoords[country] || [0, 0];
+                    // Filter based on slidervalues
+if (
+                        cropData[country].waterFootprint <= waterVal &&
+                        cropData[country].fertilizerInput <= fertilizerVal &&
+                        cropData[country].labour <= labourVal &&
+                        cropData[country].landUse <= landuseVal
+                    ) {
+                        makeMarker(lat, lon, `<b>${country}</b><br>${crop} Producer`, crop, country);
+                    }
+                }
+            }
+        } else {
+            const capitalizedCropType = cropType.charAt(0).toUpperCase() + cropType.slice(1);
+            const cropData = productionTrends[capitalizedCropType];
+            if (!cropData) return;
+
+            for (const country in cropData) {
+                const [lat, lon] = countryCoords[country] || [0, 0];
+                // Filter based on slider values
+                if (
+                    cropData[country].waterFootprint <= waterVal &&
+                    cropData[country].fertilizerInput <= fertilizerVal &&
+                    cropData[country].labour <= labourVal &&
+                    cropData[country].landUse <= landuseVal
+                ) {
+                    makeMarker(lat, lon, `<b>${country}</b><br>${capitalizedCropType} Producer`, capitalizedCropType, country);
+                }
+            }
+        }
+    }
+
+    // Chart handling
+    let chartInstance;
+
+    function showChart(cropType, country) {
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        const productionData = productionTrends[cropType][country];
+        const landUse = landUseData[cropType] ? landUseData[cropType][country] : null; // Check if landUseData[cropType] exists
+
+        if (chartInstance) {
+            chartInstance.destroy(); // remove previous chart
+        }
+
+        if (!productionData) {
+            console.error(`Production data is missing for ${cropType} in ${country}`);
+            return; // Exit if production data is missing
+        }
+
+        const datasets = [
+            {
+                label: `${cropType} Production in ${country} (Mt)`,
+                data: productionData.values,
+                borderColor: 'green',
+                backgroundColor: 'rgba(0,128,0,0.1)',
+                fill: true,
+                tension: 0.3
+            }
+        ];
+
+        if (landUse) {
+            datasets.push({
+                label: `${cropType} Land Use in ${country} (%)`,
+                data: landUse.values,
+                borderColor: 'orange',
+                backgroundColor: 'rgba(255,165,0,0.1)',
+                fill: true,
+                tension: 0.3
+            });
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: productionData.years,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Million Tonnes / %'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${country} - ${cropType} Production & Land Use Trends`
+                    }
+                }
+            }
+        });
+    }
+
+    // Add event listener for crop type dropdown
+    document.getElementById('cropTypeSelect').addEventListener('change', function() {
+        const selectedCrop = this.value;
+        const waterVal = parseInt(waterSlider.value);
+        const fertilizerVal = parseInt(fertilizerSlider.value);
+        const labourVal = parseInt(labourSlider.value);
+        const landuseVal = parseFloat(landuseSlider.value);
+        updateMarkers(selectedCrop, waterVal, fertilizerVal, labourVal, landuseVal);  // Pass slider values
+    });
+
+    // Get slider elements
+    const waterSlider = document.getElementById('water-slider');
+    const fertilizerSlider = document.getElementById('fertilizer-slider');
+    const labourSlider = document.getElementById('labour-slider');
+    const landuseSlider = document.getElementById('landuse-slider');
+
+    // Get the <div> elements to display slider values
+    const waterValueDisplay = document.getElementById('water-slider-value');
+    const fertilizerValueDisplay = document.getElementById('fertilizer-value');
+    const labourValueDisplay = document.getElementById('labour-slider-value');
+    const landuseValueDisplay = document.getElementById('landuse-slider-value');
+
+    // Function to filter and update map based on slider values
+    function filterAndUpdateMap() {
+        const waterVal = parseInt(waterSlider.value);
+        const fertilizerVal = parseInt(fertilizerSlider.value);
+        const labourVal = parseInt(labourSlider.value);
+        const landuseVal = parseFloat(landuseSlider.value);
+
+        waterValueDisplay.textContent = waterVal;
+        fertilizerValueDisplay.textContent = fertilizerVal;
+        labourValueDisplay.textContent = labourVal;
+        landuseValueDisplay.textContent = landuseVal.toFixed(1);
+
+        const selectedCrop = document.getElementById('cropTypeSelect').value;
+        updateMarkers(selectedCrop, waterVal, fertilizerVal, labourVal, landuseVal);  // Pass slider values
+    }
+
+    // Add event listeners to sliders
+    waterSlider.addEventListener('input', filterAndUpdateMap);
+    fertilizerSlider.addEventListener('input', filterAndUpdateMap);
+    labourSlider.addEventListener('input', filterAndUpdateMap);
+    landuseSlider.addEventListener('input', filterAndUpdateMap);
+
+    // Initial call to update map
+    filterAndUpdateMap();
+    // Initialize with the default crop type (Palm Oil)
+    const initialWaterVal = parseInt(waterSlider.value);
+    const initialFertilizerVal = parseInt(fertilizerSlider.value);
+    const initialLabourVal = parseInt(labourSlider.value);
+    const initialLanduseVal = parseFloat(landuseSlider.value);
+    updateMarkers('Palm Oil', initialWaterVal, initialFertilizerVal, initialLabourVal, initialLanduseVal);
+</script>
+
+</body>
+</html>
