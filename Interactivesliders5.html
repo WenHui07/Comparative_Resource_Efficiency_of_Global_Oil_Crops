@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Oil Sustainability Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slider-group {
+            margin-bottom: 2rem;
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .slider-group label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 0.5rem;
+            background: #e5e7eb;
+            border-radius: 0.5rem;
+            outline: none;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover,
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #4f46e5;
+        }
+
+        input[type="range"]:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            outline: none;
+        }
+
+        .slider-value {
+            position: absolute;
+            right: 0;
+            top: -1.8rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            font-weight: 600;
+            background-color: #f3f4f6;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .slider-limits {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        #graph-container {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        #data-table thead tr {
+            background-color: #f7fafc;
+            color: #374151;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        #data-table th,
+        #data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        #data-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        #data-table th {
+            font-weight: 600;
+        }
+
+        .sliders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        #totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        #totals-table th,
+        #totals-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        #totals-table thead tr {
+            background-color: #f7fafc;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .scenario-controls {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .scenario-select {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .positive-change {
+            color: #10b981;
+        }
+
+        .negative-change {
+            color: #ef4444;
+        }
+
+        .neutral-change {
+            color: #6b7280;
+        }
+
+        .deficit {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .surplus {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-deficit {
+            background-color: #ef4444;
+        }
+
+        .status-surplus {
+            background-color: #10b981;
+        }
+
+        .status-balanced {
+            background-color: #6b7280;
+        }
+
+        .metric-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Vegetable Oil Sustainability Dashboard</h1>
+        
+        <div class="scenario-controls">
+            <label for="scenario-select">Scenario Year:</label>
+            <select id="scenario-select" class="scenario-select">
+                <option value="2022">2022/2023</option>
+                <option value="2023">2023/2024</option>
+                <option value="2024">2024/2025</option>
+            </select>
+            <div id="global-status" style="margin-left: auto; display: flex; align-items: center;">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-title">Total Production</div>
+                <div class="metric-value" id="metric-total-production">0.00</div>
+                <div class="metric-change" id="metric-total-production-change">0.00 (0.0%)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Consumption</div>
+                <div class="metric-value" id="metric-total-consumption">0.00</div>
+                <div class="metric-change" id="metric-total-consumption-change">0.00 (0.0%)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Total Deficit/Surplus</div>
+                <div class="metric-value" id="metric-total-deficit">0.00</div>
+                <div class="metric-change" id="metric-total-deficit-change">0.00 (0.0%)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Area Harvested</div>
+                <div class="metric-value" id="metric-total-area">0.00</div>
+                <div class="metric-change" id="metric-total-area-change">0.00 (0.0%)</div>
+            </div>
+        </div>
+
+        <div class="sliders-container">
+            <div class="slider-group">
+                <label for="palm-oil-slider">Palm Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="palm-oil-value">76.63</span>
+                    <input type="range" id="palm-oil-slider" min="50" max="100" step="0.1" value="76.63">
+                </div>
+                <div class="slider-limits">
+                    <span>50</span>
+                    <span>100</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="soybean-oil-slider">Soybean Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="soybean-oil-value">60.71</span>
+                    <input type="range" id="soybean-oil-slider" min="40" max="80" step="0.1" value="60.71">
+                </div>
+                <div class="slider-limits">
+                    <span>40</span>
+                    <span>80</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="rapeseed-oil-slider">Rapeseed Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="rapeseed-oil-value">31.21</span>
+                    <input type="range" id="rapeseed-oil-slider" min="20" max="40" step="0.1" value="31.21">
+                </div>
+                <div class="slider-limits">
+                    <span>20</span>
+                    <span>40</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="sunflower-oil-slider">Sunflower Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="sunflower-oil-value">20.52</span>
+                    <input type="range" id="sunflower-oil-slider" min="10" max="30" step="0.1" value="20.52">
+                </div>
+                <div class="slider-limits">
+                    <span>10</span>
+                    <span>30</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="groundnut-oil-slider">Groundnut Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="groundnut-oil-value">6.3</span>
+                    <input type="range" id="groundnut-oil-slider" min="4" max="8" step="0.1" value="6.3">
+                </div>
+                <div class="slider-limits">
+                    <span>4</span>
+                    <span>8</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <label for="cottonseed-oil-slider">Cottonseed Oil Production (Mt)</label>
+                <div class="slider-container">
+                    <span class="slider-value" id="cottonseed-oil-value">4.95</span>
+                    <input type="range" id="cottonseed-oil-slider" min="3" max="6" step="0.1" value="4.95">
+                </div>
+                <div class="slider-limits">
+                    <span>3</span>
+                    <span>6</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="graph-container"></div>
+
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Vegetable Oil</th>
+                    <th>Production (Mt)</th>
+                    <th>Consumption (Mt)</th>
+                    <th>Deficit/Surplus (Mt)</th>
+                    <th>Area Harvested (Mha)</th>
+                    <th>Land Use (Mha/Mt)</th>
+                    <th>Water Footprint (m3/tonne)</th>
+                    <th>Fertilizer Input (kg/ha/year)</th>
+                    <th>Labour Demand (hrs/ha/year)</th>
+                    <th>Labour Cost ($/tone)</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <table id="totals-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Total</th>
+                    <th>Change from Baseline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Total Consumption (Mt)</td>
+                    <td id="total-consumption"></td>
+                    <td id="total-consumption-change">0.00 (0.0%)</td>
+                </tr>
+                <tr>
+                    <td>Total Production (Mt)</td>
+                    <td id="total-production"></td>
+                    <td id="total-production-change"></td>
+                </tr>
+                <tr>
+                    <td>Area Harvested (Million ha)</td>
+                    <td id="total-area-harvested"></td>
+                    <td id="total-area-harvested-change"></td>
+                </tr>
+                <tr>
+                    <td>Land Use (Mha/Mt)</td>
+                    <td id="total-land-use"></td>
+                    <td id="total-land-use-change"></td>
+                </tr>
+                <tr>
+                    <td>Water Footprint (m3/tonne)</td>
+                    <td id="total-water-footprint"></td>
+                    <td id="total-water-footprint-change"></td>
+                </tr>
+                <tr>
+                    <td>Fertilizer Input (kg/ha/year)</td>
+                    <td id="total-fertilizer-input"></td>
+                    <td id="total-fertilizer-input-change"></td>
+                </tr>
+                <tr>
+                    <td>Labour Demand (hrs/ha/year)</td>
+                    <td id="total-labour-demand"></td>
+                    <td id="total-labour-demand-change"></td>
+                </tr>
+                <tr>
+                    <td>Labour Cost ($/tone)</td>
+                    <td id="total-labour-cost"></td>
+                    <td id="total-labour-cost-change"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Consumption data by year
+        const consumptionData = {
+            "2022": {
+                "Palm Oil": 76.63,
+                "Soybean Oil": 60.71,
+                "Rapeseed Oil": 31.21,
+                "Sunflower Oil": 20.52,
+                "Groundnut Oil": 6.3,
+                "Cottonseed Oil": 4.95
+            },
+            "2023": {
+                "Palm Oil": 76.26,
+                "Soybean Oil": 63.87,
+                "Rapeseed Oil": 32.82,
+                "Sunflower Oil": 19.37,
+                "Groundnut Oil": 6.22,
+                "Cottonseed Oil": 4.93
+            },
+            "2024": {
+                "Palm Oil": 78.17,
+                "Soybean Oil": 67.55,
+                "Rapeseed Oil": 34.51,
+                "Sunflower Oil": 20.27,
+                "Groundnut Oil": 6.21,
+                "Cottonseed Oil": 4.93
+            }
+        };
+
+        // Baseline Data (original values)
+        const baselineData = {
+            "Vegetable Oil": ["Palm Oil", "Soybean Oil", "Rapeseed Oil", "Sunflower Oil", "Groundnut Oil", "Cottonseed Oil"],
+            "Oilseed Yield (Mt/ha)": [3.68, 0.45, 1.05, 0.72, 0.57, 0.16], // Yield per hectare for each oil
+            "Land Use (Mha/Mt)": [0.272, 2.222, 0.952, 1.389, 1.755, 6.25], // Land use efficiency
+            "Water Footprint (m3/tonne)": [5000, 4200, 4300, 6800, 7500, 3800], // Water footprint per tonne
+            "Fertilizer Input (kg/ha/year)": [337.83, 81.94, 126.41, 82.21, 8.67, 184.29], // Fertilizer per hectare
+            "Labour Demand (hrs/ha/year)": [200, 10, 10, 10, 100, 150], // Labour hours per hectare
+            "Labour Cost ($/tone)": [150, 50, 100, 200, 650, 300] // Labour cost per tonne
+        };
+
+        // Current scenario and production values
+        let currentScenario = "2022";
+        let currentProductionValues = Object.values(consumptionData[currentScenario]);
+        let currentConsumptionValues = Object.values(consumptionData[currentScenario]);
+
+        // Calculate baseline totals for comparison
+        function calculateBaselineTotals(year) {
+            const consumption = consumptionData[year];
+            const totals = {
+                "Production": Object.values(consumption).reduce((a, b) => a + b, 0),
+                "Consumption": Object.values(consumption).reduce((a, b) => a + b, 0),
+                "Area Harvested": 0,
+                "Land Use": 0,
+                "Water Footprint": 0,
+                "Fertilizer Input": 0,
+                "Labour Demand": 0,
+                "Labour Cost": 0
+            };
+
+            baselineData["Vegetable Oil"].forEach((oil, index) => {
+                const production = consumption[oil];
+                const areaHarvested = production / baselineData["Oilseed Yield (Mt/ha)"][index];
+                
+                totals["Area Harvested"] += areaHarvested;
+                totals["Land Use"] += areaHarvested / production;
+                totals["Water Footprint"] += baselineData["Water Footprint (m3/tonne)"][index] * production;
+                totals["Fertilizer Input"] += baselineData["Fertilizer Input (kg/ha/year)"][index] * areaHarvested;
+                totals["Labour Demand"] += baselineData["Labour Demand (hrs/ha/year)"][index] * areaHarvested;
+                totals["Labour Cost"] += baselineData["Labour Cost ($/tone)"][index] * production;
+            });
+
+            return totals;
+        }
+
+        let baselineTotals = calculateBaselineTotals(currentScenario);
+
+        function calculateMetrics(productionValues, consumptionValues) {
+            const calculatedData = {
+                "Vegetable Oil": [...baselineData["Vegetable Oil"]],
+                "Production (Mt)": [...productionValues],
+                "Consumption (Mt)": [...consumptionValues],
+                "Deficit/Surplus (Mt)": [],
+                "Area Harvested (Mha)": [],
+                "Land Use (Mha/Mt)": [],
+                "Water Footprint (m3/tonne)": [],
+                "Fertilizer Input (kg/ha/year)": [],
+                "Labour Demand (hrs/ha/year)": [],
+                "Labour Cost ($/tone)": []
+            };
+
+            // Calculate dependent metrics based on production values
+            for (let i = 0; i < productionValues.length; i++) {
+                // Calculate deficit/surplus
+                calculatedData["Deficit/Surplus (Mt)"].push(productionValues[i] - consumptionValues[i]);
+                
+                // Calculate area harvested based on yield and production
+                const areaHarvested = productionValues[i] / baselineData["Oilseed Yield (Mt/ha)"][i];
+                calculatedData["Area Harvested (Mha)"].push(areaHarvested);
+                
+                // Land use is area harvested divided by production
+                calculatedData["Land Use (Mha/Mt)"].push(areaHarvested / productionValues[i]);
+                
+                // Water footprint is per tonne, so multiply by production
+                calculatedData["Water Footprint (m3/tonne)"].push(baselineData["Water Footprint (m3/tonne)"][i] * productionValues[i]);
+                
+                // Fertilizer input is per hectare, so multiply by area harvested
+                calculatedData["Fertilizer Input (kg/ha/year)"].push(baselineData["Fertilizer Input (kg/ha/year)"][i] * areaHarvested);
+                
+                // Labour demand is per hectare, so multiply by area harvested
+                calculatedData["Labour Demand (hrs/ha/year)"].push(baselineData["Labour Demand (hrs/ha/year)"][i] * areaHarvested);
+                
+                // Labour cost is per tonne, so multiply by production
+                calculatedData["Labour Cost ($/tone)"].push(baselineData["Labour Cost ($/tone)"][i] * productionValues[i]);
+            }
+
+            return calculatedData;
+        }
+
+        function updateTable(filteredData) {
+            const tableBody = document.querySelector("#data-table tbody");
+            tableBody.innerHTML = "";
+            
+            filteredData.forEach(item => {
+                const row = document.createElement("tr");
+                
+                // Determine status for deficit/surplus
+                const deficit = item["Deficit/Surplus (Mt)"] < 0;
+                const surplus = item["Deficit/Surplus (Mt)"] > 0;
+                const statusClass = deficit ? "deficit" : surplus ? "surplus" : "";
+                const statusIndicator = deficit ? 
+                    `<span class="status-indicator status-deficit"></span>` : 
+                    surplus ? `<span class="status-indicator status-surplus"></span>` :
+                    `<span class="status-indicator status-balanced"></span>`;
+                
+                row.innerHTML = `
+                    <td>${statusIndicator}${item["Vegetable Oil"]}</td>
+                    <td>${item["Production (Mt)"].toFixed(2)}</td>
+                    <td>${item["Consumption (Mt)"].toFixed(2)}</td>
+                    <td class="${statusClass}">${item["Deficit/Surplus (Mt)"].toFixed(2)}</td>
+                    <td>${item["Area Harvested (Mha)"].toFixed(2)}</td>
+                    <td>${item["Land Use (Mha/Mt)"].toFixed(4)}</td>
+                    <td>${(item["Water Footprint (m3/tonne)"] / item["Production (Mt)"]).toFixed(1)}</td>
+                    <td>${(item["Fertilizer Input (kg/ha/year)"] / item["Area Harvested (Mha)"]).toFixed(1)}</td>
+                    <td>${(item["Labour Demand (hrs/ha/year)"] / item["Area Harvested (Mha)"]).toFixed(1)}</td>
+                    <td>${(item["Labour Cost ($/tone)"] / item["Production (Mt)"]).toFixed(1)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateGraph(filteredData) {
+            const graphContainer = document.getElementById('graph-container');
+            graphContainer.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                Plotly.newPlot('graph-container', [{
+                    y: [0],
+                    type: 'bar',
+                    marker: {
+                        color: 'red'
+                    },
+                    hovertemplate: 'No data available<extra></extra>'
+                }], {
+                    title: {
+                        text: `No data available for selected production levels`,
+                        font: {
+                            size: 14,
+                            color: '#374151'
+                        }
+                    },
+                    xaxis: {
+                        title: {
+                            text: 'Vegetable Oil',
+                            font: {
+                                size: 12,
+                                color: '#4b5563'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Value',
+                            font: {
+                                size: 12,
+                                color: '#4b5563'
+                            }
+                        }
+                    },
+                    plot_bgcolor: 'transparent',
+                    paper_bgcolor: 'transparent',
+                });
+                return;
+            }
+
+            const vegetableOils = filteredData.map(item => item["Vegetable Oil"]);
+            const production = filteredData.map(item => item["Production (Mt)"]);
+            const consumption = filteredData.map(item => item["Consumption (Mt)"]);
+            const deficitSurplus = filteredData.map(item => item["Deficit/Surplus (Mt)"]);
+            const areaHarvested = filteredData.map(item => item["Area Harvested (Mha)"]);
+            const landUse = filteredData.map(item => item["Land Use (Mha/Mt)"]);
+
+            const traces = [
+                {
+                    x: vegetableOils,
+                    y: production,
+                    type: 'bar',
+                    name: 'Production',
+                    marker: {
+                        color: '#4f46e5'
+                    },
+                    hovertemplate: '<b>%{x}</b><br>Production: %{y:.2f} Mt<extra></extra>'
+                },
+                {
+                    x: vegetableOils,
+                    y: consumption,
+                    type: 'bar',
+                    name: 'Consumption',
+                    marker: {
+                        color: '#10b981'
+                    },
+                    hovertemplate: '<b>%{x}</b><br>Consumption: %{y:.2f} Mt<extra></extra>'
+                },
+                {
+                    x: vegetableOils,
+                    y: deficitSurplus,
+                    type: 'bar',
+                    name: 'Deficit/Surplus',
+                    marker: {
+                        color: deficitSurplus.map(val => val < 0 ? '#ef4444' : '#10b981')
+                    },
+                    hovertemplate: '<b>%{x}</b><br>%{text}<extra></extra>',
+                    text: deficitSurplus.map(val => val < 0 ? `Deficit: ${Math.abs(val).toFixed(2)} Mt` : `Surplus: ${val.toFixed(2)} Mt`)
+                }
+            ];
+
+            const layout = {
+                title: {
+                    text: `Vegetable Oil Production vs Consumption (${currentScenario})`,
+                    font: {
+                        size: 16,
+                        color: '#374151'
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: 'Vegetable Oil',
+                        font: {
+                            size: 12,
+                            color: '#4b5563'
+                        }
+                    },
+                    tickfont: {
+                        size: 10,
+                        color: '#6b7280'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Million Metric Tons',
+                        font: {
+                            size: 12,
+                            color: '#4b5563'
+                        }
+                    },
+                    tickfont: {
+                        size: 10,
+                        color: '#6b7280'
+                    }
+                },
+                barmode: 'group',
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                legend: {
+                    font: {
+                        size: 10,
+                        color: '#4b5563'
+                    },
+                    orientation: 'h',
+                    yanchor: 'bottom',
+                    y: 1.02,
+                    xanchor: 'right',
+                    x: 1
+                },
+                margin: {
+                    l: 50,
+                    r: 20,
+                    t: 60,
+                    b: 80
+                },
+                hoverlabel: {
+                    bgcolor: '#f0f0f0',
+                    bordercolor: '#d1d5db',
+                    font: {
+                        color: '#1f2937'
+                    }
+                }
+            };
+
+            Plotly.newPlot('graph-container', traces, layout);
+        }
+
+        function updateTotals(filteredData) {
+            let totalProduction = 0;
+            let totalConsumption = 0;
+            let totalAreaHarvested = 0;
+            let totalLandUse = 0;
+            let totalWaterFootprint = 0;
+            let totalFertilizerInput = 0;
+            let totalLabourDemand = 0;
+            let totalLabourCost = 0;
+
+            filteredData.forEach(item => {
+                totalProduction += item["Production (Mt)"];
+                totalConsumption += item["Consumption (Mt)"];
+                totalAreaHarvested += item["Area Harvested (Mha)"];
+                totalLandUse += item["Land Use (Mha/Mt)"];
+                totalWaterFootprint += item["Water Footprint (m3/tonne)"];
+                totalFertilizerInput += item["Fertilizer Input (kg/ha/year)"];
+                totalLabourDemand += item["Labour Demand (hrs/ha/year)"];
+                totalLabourCost += item["Labour Cost ($/tone)"];
+            });
+
+            // Calculate average land use (weighted by production)
+            const avgLandUse = totalAreaHarvested / totalProduction;
+            
+            // Calculate average water footprint (weighted by production)
+            const avgWaterFootprint = totalWaterFootprint / totalProduction;
+            
+            // Calculate average fertilizer input (weighted by area)
+            const avgFertilizerInput = totalFertilizerInput / totalAreaHarvested;
+            
+            // Calculate average labour demand (weighted by area)
+            const avgLabourDemand = totalLabourDemand / totalAreaHarvested;
+            
+            // Calculate average labour cost (weighted by production)
+            const avgLabourCost = totalLabourCost / totalProduction;
+
+            // Update totals
+            document.getElementById("total-consumption").textContent = totalConsumption.toFixed(2);
+            document.getElementById("total-production").textContent = totalProduction.toFixed(2);
+            document.getElementById("total-area-harvested").textContent = totalAreaHarvested.toFixed(2);
+            document.getElementById("total-land-use").textContent = avgLandUse.toFixed(4);
+            document.getElementById("total-water-footprint").textContent = avgWaterFootprint.toFixed(1);
+            document.getElementById("total-fertilizer-input").textContent = avgFertilizerInput.toFixed(1);
+            document.getElementById("total-labour-demand").textContent = avgLabourDemand.toFixed(1);
+            document.getElementById("total-labour-cost").textContent = avgLabourCost.toFixed(1);
+
+            // Update metric cards
+            document.getElementById("metric-total-production").textContent = totalProduction.toFixed(2);
+            document.getElementById("metric-total-consumption").textContent = totalConsumption.toFixed(2);
+            
+            const totalDeficit = totalProduction - totalConsumption;
+            const deficitElement = document.getElementById("metric-total-deficit");
+            deficitElement.textContent = Math.abs(totalDeficit).toFixed(2);
+            if (totalDeficit < 0) {
+                deficitElement.className = "metric-value deficit";
+                deficitElement.textContent = `-${Math.abs(totalDeficit).toFixed(2)}`;
+            } else if (totalDeficit > 0) {
+                deficitElement.className = "metric-value surplus";
+                deficitElement.textContent = `+${totalDeficit.toFixed(2)}`;
+            } else {
+                deficitElement.className = "metric-value";
+            }
+            
+            document.getElementById("metric-total-area").textContent = totalAreaHarvested.toFixed(2);
+
+            // Calculate and display changes from baseline
+            const formatChange = (current, baseline, isPercentage = false) => {
+                const change = current - baseline;
+                const percent = (change / baseline) * 100;
+                const sign = change >= 0 ? '+' : '';
+                
+                if (Math.abs(change) < 0.01 && Math.abs(percent) < 0.1) {
+                    return `<span class="neutral-change">0.00 (0.0%)</span>`;
+                }
+                
+                const changeClass = change > 0 ? "positive-change" : change < 0 ? "negative-change" : "neutral-change";
+                const changeValue = isPercentage ? percent.toFixed(1) : change.toFixed(2);
+                const changeText = isPercentage ? 
+                    `${sign}${Math.abs(percent).toFixed(1)}%` : 
+                    `${sign}${change.toFixed(2)} (${sign}${Math.abs(percent).toFixed(1)}%)`;
+                
+                return `<span class="${changeClass}">${changeText}</span>`;
+            };
+
+            // Update change indicators
+            document.getElementById("total-production-change").innerHTML = 
+                formatChange(totalProduction, baselineTotals["Production"]);
+            document.getElementById("total-area-harvested-change").innerHTML = 
+                formatChange(totalAreaHarvested, baselineTotals["Area Harvested"]);
+            document.getElementById("total-land-use-change").innerHTML = 
+                formatChange(avgLandUse, baselineTotals["Land Use"] / baselineData["Vegetable Oil"].length);
+            document.getElementById("total-water-footprint-change").innerHTML = 
+                formatChange(avgWaterFootprint, baselineTotals["Water Footprint"] / baselineTotals["Production"]);
+            document.getElementById("total-fertilizer-input-change").innerHTML = 
+                formatChange(avgFertilizerInput, baselineTotals["Fertilizer Input"] / baselineTotals["Area Harvested"]);
+            document.getElementById("total-labour-demand-change").innerHTML = 
+                formatChange(avgLabourDemand, baselineTotals["Labour Demand"] / baselineTotals["Area Harvested"]);
+            document.getElementById("total-labour-cost-change").innerHTML = 
+                formatChange(avgLabourCost, baselineTotals["Labour Cost"] / baselineTotals["Production"]);
+
+            // Update metric card changes
+            document.getElementById("metric-total-production-change").innerHTML = 
+                formatChange(totalProduction, baselineTotals["Production"]);
+            document.getElementById("metric-total-consumption-change").innerHTML = 
+                formatChange(totalConsumption, baselineTotals["Consumption"]);
+            document.getElementById("metric-total-deficit-change").innerHTML = 
+                formatChange(totalDeficit, 0);
+            document.getElementById("metric-total-area-change").innerHTML = 
+                formatChange(totalAreaHarvested, baselineTotals["Area Harvested"]);
+
+            // Update global status indicator
+            const globalStatusElement = document.getElementById("global-status");
+            globalStatusElement.innerHTML = '';
+            
+            if (totalDeficit < 0) {
+                const statusElement = document.createElement("div");
+                statusElement.innerHTML = `
+                    <span class="status-indicator status-deficit"></span>
+                    <span style="font-weight: 600; color: #ef4444;">Global Deficit: ${Math.abs(totalDeficit).toFixed(2)} Mt</span>
+                `;
+                globalStatusElement.appendChild(statusElement);
+            } else if (totalDeficit > 0) {
+                const statusElement = document.createElement("div");
+                statusElement.innerHTML = `
+                    <span class="status-indicator status-surplus"></span>
+                    <span style="font-weight: 600; color: #10b981;">Global Surplus: ${totalDeficit.toFixed(2)} Mt</span>
+                `;
+                globalStatusElement.appendChild(statusElement);
+            } else {
+                const statusElement = document.createElement("div");
+                statusElement.innerHTML = `
+                    <span class="status-indicator status-balanced"></span>
+                    <span style="font-weight: 600; color: #6b7280;">Balanced Production</span>
+                `;
+                globalStatusElement.appendChild(statusElement);
+            }
+        }
+
+        function updateDashboard(productionValues, consumptionValues) {
+            const calculatedData = calculateMetrics(productionValues, consumptionValues);
+            const filteredData = calculatedData["Vegetable Oil"].map((oil, index) => ({
+                "Vegetable Oil": oil,
+                "Production (Mt)": calculatedData["Production (Mt)"][index],
+                "Consumption (Mt)": calculatedData["Consumption (Mt)"][index],
+                "Deficit/Surplus (Mt)": calculatedData["Deficit/Surplus (Mt)"][index],
+                "Area Harvested (Mha)": calculatedData["Area Harvested (Mha)"][index],
+                "Land Use (Mha/Mt)": calculatedData["Land Use (Mha/Mt)"][index],
+                "Water Footprint (m3/tonne)": calculatedData["Water Footprint (m3/tonne)"][index],
+                "Fertilizer Input (kg/ha/year)": calculatedData["Fertilizer Input (kg/ha/year)"][index],
+                "Labour Demand (hrs/ha/year)": calculatedData["Labour Demand (hrs/ha/year)"][index],
+                "Labour Cost ($/tone)": calculatedData["Labour Cost ($/tone)"][index]
+            }));
+            
+            updateTable(filteredData);
+            updateGraph(filteredData);
+            updateTotals(filteredData);
+        }
+
+        // Initial dashboard rendering
+        updateDashboard(currentProductionValues, currentConsumptionValues);
+
+        // Helper function to create slider event listeners
+        function createSliderListener(sliderId, valueId, index) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(valueId);
+            
+            slider.addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                valueDisplay.textContent = value.toFixed(2);
+                
+                // Update only the changed production value
+                currentProductionValues[index] = value;
+                
+                // Update the dashboard with new values
+                updateDashboard(currentProductionValues, currentConsumptionValues);
+            });
+        }
+
+        // Set up event listeners for all sliders
+        createSliderListener('palm-oil-slider', 'palm-oil-value', 0);
+        createSliderListener('soybean-oil-slider', 'soybean-oil-value', 1);
+        createSliderListener('rapeseed-oil-slider', 'rapeseed-oil-value', 2);
+        createSliderListener('sunflower-oil-slider', 'sunflower-oil-value', 3);
+        createSliderListener('groundnut-oil-slider', 'groundnut-oil-value', 4);
+        createSliderListener('cottonseed-oil-slider', 'cottonseed-oil-value', 5);
+
+        // Scenario selector
+        document.getElementById('scenario-select').addEventListener('change', function() {
+            currentScenario = this.value;
+            currentConsumptionValues = Object.values(consumptionData[currentScenario]);
+            
+            // Reset production values to match consumption for the new scenario
+            currentProductionValues = [...currentConsumptionValues];
+            
+            // Update all sliders
+            document.getElementById('palm-oil-slider').value = currentProductionValues[0];
+            document.getElementById('palm-oil-value').textContent = currentProductionValues[0].toFixed(2);
+            
+            document.getElementById('soybean-oil-slider').value = currentProductionValues[1];
+            document.getElementById('soybean-oil-value').textContent = currentProductionValues[1].toFixed(2);
+            
+            document.getElementById('rapeseed-oil-slider').value = currentProductionValues[2];
+            document.getElementById('rapeseed-oil-value').textContent = currentProductionValues[2].toFixed(2);
+            
+            document.getElementById('sunflower-oil-slider').value = currentProductionValues[3];
+            document.getElementById('sunflower-oil-value').textContent = currentProductionValues[3].toFixed(2);
+            
+            document.getElementById('groundnut-oil-slider').value = currentProductionValues[4];
+            document.getElementById('groundnut-oil-value').textContent = currentProductionValues[4].toFixed(2);
+            
+            document.getElementById('cottonseed-oil-slider').value = currentProductionValues[5];
+            document.getElementById('cottonseed-oil-value').textContent = currentProductionValues[5].toFixed(2);
+            
+            // Recalculate baseline totals for the new scenario
+            baselineTotals = calculateBaselineTotals(currentScenario);
+            
+            // Update the dashboard
+            updateDashboard(currentProductionValues, currentConsumptionValues);
+        });
+    </script>
+</body>
+</html>
